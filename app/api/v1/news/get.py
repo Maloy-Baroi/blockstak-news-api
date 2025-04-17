@@ -23,9 +23,6 @@ async def get_news(
     client: httpx.AsyncClient = Depends(get_newsapi_client),
     db: Session = Depends(get_db)
 ):
-    """
-    Fetch all news with pagination support
-    """
     params = {
         "apiKey": settings.NEWSAPI_KEY,
         "page": page_no,
@@ -63,8 +60,7 @@ async def get_news(
             message="News fetched successfully",
             status_code=status.HTTP_200_OK
         )
-    
-    except httpx.HTTPError as e:
+    except Exception as e:
         return handle_error_response(
             message="Failed to fetch news",
             status_code=status.HTTP_400_BAD_REQUEST, 
