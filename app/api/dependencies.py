@@ -3,8 +3,8 @@ from fastapi import Depends, HTTPException, status
 from typing import Dict, Any
 
 from app.config import get_settings
-from app.auth import get_current_client
-from app.schemas import TokenData
+from app.oauth import get_current_client
+from app.schemas.news import TokenData
 
 settings = get_settings()
 
