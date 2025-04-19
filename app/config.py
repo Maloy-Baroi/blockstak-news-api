@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # Database settings
-    DATABASE_URL: str = "sqlite:///./news.db"
+    DATABASE_URL: str = "postgresql://postgres:1234@localhost:5432/blockstak_news_db"
     
     # NewsAPI settings
     NEWSAPI_KEY: str

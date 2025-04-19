@@ -19,50 +19,52 @@ router = APIRouter()
 async def get_news(
     page_no: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
-    token_data: TokenData = Depends(verify_api_access),
     client: httpx.AsyncClient = Depends(get_newsapi_client),
     db: Session = Depends(get_db)
 ):
-    params = {
-        "apiKey": settings.NEWSAPI_KEY,
-        "page": page_no,
-        "pageSize": page_size
-    }
-    
     try:
-        response = await client.get("/top-headlines", params=params)
-        response.raise_for_status()
-        data = response.json()
-        
-        # Format response
-        articles = data.get("articles", [])
-        total = data.get("totalResults", 0)
-        
-        news_list = []
-        for article in articles:
-            news = {
-                "title": article.get("title", ""),
-                "description": article.get("description", ""),
-                "url": article.get("url", ""),
-                "published_at": article.get("publishedAt", datetime.utcnow().isoformat()),
-                "source": article.get("source", {}).get("name", "Unknown"),
-                "country": None
-            }
-            news_list.append(News(**news, id=0, created_at=datetime.utcnow()))
-        
-        return handle_success_response(
-            data={
-                "data": news_list,
-                "total": total,
-                "page_no": page_no,
-                "page_size": page_size
-            },
-            message="News fetched successfully",
-            status_code=status.HTTP_200_OK
+        params = {
+            "page": page_no,
+            "pageSize": page_size,
+            "country": "us"  # You can make this configurable if needed
+        }
+        resp = await client.get("/top-headlines", params=params)
+        resp.raise_for_status()
+    except httpx.HTTPStatusError as exc:
+        # mirror the NewsAPI status code
+        raise HTTPException(
+            status_code=exc.response.status_code,
+            detail=exc.response.text
         )
-    except Exception as e:
-        return handle_error_response(
-            message="Failed to fetch news",
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            error_details=str(e)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal error fetching news"
         )
+
+    data = resp.json()
+    articles = data.get("articles", [])
+    total = data.get("totalResults", 0)
+
+    news_list = [
+        News(
+            id=0,
+            title=a.get("title", ""),
+            description=a.get("description", ""),
+            url=a.get("url", ""),
+            published_at=a.get("publishedAt", datetime.utcnow().isoformat()),
+            source=a.get("source", {}).get("name", "Unknown"),
+            country=None,
+            created_at=datetime.utcnow()
+        )
+        for a in articles
+    ]
+
+    return NewsResponse(
+        success=True,
+        message="News fetched successfully",
+        data=news_list,
+        total=total,
+        page_no=page_no,
+        page_size=page_size
+    )
