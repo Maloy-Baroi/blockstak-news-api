@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl
+from pydantic import BaseModel, HttpUrl, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -6,7 +6,7 @@ from datetime import datetime
 class NewsBase(BaseModel):
     title: str
     description: str
-    url: str
+    url: HttpUrl
     published_at: datetime
     source: str
     country: Optional[str] = None
@@ -20,8 +20,7 @@ class NewsInDB(NewsBase):
     id: int
     created_at: datetime
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class News(NewsInDB):
@@ -31,8 +30,8 @@ class News(NewsInDB):
 class NewsResponse(BaseModel):
     data: List[News]
     total: int
-    page: int
-    limit: int
+    page_no: int
+    page_size: int
 
 
 class Token(BaseModel):

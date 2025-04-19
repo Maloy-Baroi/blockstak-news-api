@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-# filepath: d:\Interview_Task\blockstak-news-api\app\oauth.py
+# filepath: d:\Interview_Task\blockstak-news-api\app\auth.py
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import jwt
 from sqlalchemy.orm import Session
